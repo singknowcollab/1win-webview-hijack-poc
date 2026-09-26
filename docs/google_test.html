@@ -2,7 +2,7 @@
 <html>
 <head><title>google-login-test</title></head>
 <body>
-<h1>google-login-test-v2</h1>
+<h1>google-login-test-v3</h1>
 <script>
 (function() {
   var out = document.createElement('pre');
@@ -14,34 +14,26 @@
   window.handleNativeMessage = function(dataStr) {
     var s = String(dataStr);
     log("[handleNativeMessage] " + s);
-    alert("RESULT: " + s.substring(0, 900));
+    alert("RESULT:\n" + s.substring(0, 1200));
   };
 
   var params = new URLSearchParams(window.location.search);
   var clientId = params.get("cid") || "REAL_1WIN_CLIENT_ID_PLACEHOLDER";
   log("Using clientId: " + clientId);
+  log("Will fire ONCE after 4s. Take your time selecting the account - no retries this time.");
 
-  function fire(attempt) {
+  setTimeout(function() {
     try {
       window.AndroidBridge.sendToNative(JSON.stringify({
         type: "LOGIN_WITH_GOOGLE",
         data: { clientId: clientId }
       }));
-      log("fired attempt " + attempt);
+      log("fired (single shot)");
     } catch (e) {
-      log("EXCEPTION on attempt " + attempt + ": " + e);
+      log("EXCEPTION: " + e);
+      alert("EXCEPTION: " + e);
     }
-  }
-
-  // Retry several times with increasing delay, since the native
-  // dispatch channel may not be ready immediately after page load.
-  [1000, 3000, 6000, 10000, 15000].forEach(function(delay, i) {
-    setTimeout(function() { fire(i + 1); }, delay);
-  });
-
-  setTimeout(function() {
-    alert("STATUS after 16s:\n" + out.textContent.slice(-900));
-  }, 16000);
+  }, 4000);
 })();
 </script>
 </body>
