@@ -2,7 +2,7 @@
 <html>
 <head><title>google-login-test</title></head>
 <body>
-<h1>google-login-test</h1>
+<h1>google-login-test-v2</h1>
 <script>
 (function() {
   var out = document.createElement('pre');
@@ -21,16 +21,27 @@
   var clientId = params.get("cid") || "REAL_1WIN_CLIENT_ID_PLACEHOLDER";
   log("Using clientId: " + clientId);
 
-  try {
-    window.AndroidBridge.sendToNative(JSON.stringify({
-      type: "LOGIN_WITH_GOOGLE",
-      data: { clientId: clientId }
-    }));
-    alert("Fired LOGIN_WITH_GOOGLE with clientId:\n" + clientId);
-  } catch (e) {
-    log("EXCEPTION: " + e);
-    alert("EXCEPTION: " + e);
+  function fire(attempt) {
+    try {
+      window.AndroidBridge.sendToNative(JSON.stringify({
+        type: "LOGIN_WITH_GOOGLE",
+        data: { clientId: clientId }
+      }));
+      log("fired attempt " + attempt);
+    } catch (e) {
+      log("EXCEPTION on attempt " + attempt + ": " + e);
+    }
   }
+
+  // Retry several times with increasing delay, since the native
+  // dispatch channel may not be ready immediately after page load.
+  [1000, 3000, 6000, 10000, 15000].forEach(function(delay, i) {
+    setTimeout(function() { fire(i + 1); }, delay);
+  });
+
+  setTimeout(function() {
+    alert("STATUS after 16s:\n" + out.textContent.slice(-900));
+  }, 16000);
 })();
 </script>
 </body>
