@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>crash-test</title></head>
+<body>
+<h1>crash-test</h1>
+<script>
+(function() {
+  var out = document.createElement('pre');
+  document.body.appendChild(out);
+  function log(s) { out.textContent += s + "\n"; }
+  try {
+    log("calling getPermissionStatus('GARBAGE_VALUE_XYZ')...");
+    var r = window.AndroidBridge.getPermissionStatus("GARBAGE_VALUE_XYZ");
+    log("returned normally: " + r);
+    alert("NO CRASH - returned: " + r);
+  } catch (e) {
+    log("JS caught exception: " + e);
+    alert("JS-side exception (app did not crash): " + e);
+  }
+})();
+</script>
+</body>
+</html>
